@@ -49,6 +49,7 @@ dev.db
 /*.js
 /*.py
 /*.ps1
+push_to_github.bat
 .agents/
 .windsurf/
 .claude/
