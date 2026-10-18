@@ -91,7 +91,7 @@ export default async function Home({
 
   const totalFilteredCount = await prisma.listing.count({ where });
   const totalPages = Math.ceil(totalFilteredCount / limit);
-  const totalCount = await prisma.listing.count({ where: { status: "ACTIVE" } });
+  const totalCount = await prisma.listing.count({ where: { status: "ACTIVE", isHidden: false } });
 
   const isMapView = resolvedParams.view === "map";
   
