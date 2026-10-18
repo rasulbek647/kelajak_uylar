@@ -19,6 +19,10 @@ export default function AdminSettingsPage() {
   const [listingActiveDays, setListingActiveDays] = useState(30);
   const [telegramBotToken, setTelegramBotToken] = useState("");
   const [telegramChatId, setTelegramChatId] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [companyInn, setCompanyInn] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyHours, setCompanyHours] = useState("");
   
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -42,6 +46,10 @@ export default function AdminSettingsPage() {
           setListingActiveDays(data.listingActiveDays || 30);
           setTelegramBotToken(data.telegramBotToken || "");
           setTelegramChatId(data.telegramChatId || "");
+          setCompanyName(data.companyName || "«Kelajak Uylar» MCHJ");
+          setCompanyInn(data.companyInn || "");
+          setCompanyAddress(data.companyAddress || "");
+          setCompanyHours(data.companyHours || "Dushanba – Shanba, 09:00 – 18:00");
         } else {
           setError("Sozlamalarni yuklab bo'lmadi");
         }
@@ -74,7 +82,11 @@ export default function AdminSettingsPage() {
           freeListingLimit: Number(freeListingLimit),
           listingActiveDays: Number(listingActiveDays),
           telegramBotToken,
-          telegramChatId
+          telegramChatId,
+          companyName,
+          companyInn,
+          companyAddress,
+          companyHours
         })
       });
 
@@ -196,6 +208,68 @@ export default function AdminSettingsPage() {
                 <option value="UZS">{tr("So'm (UZS)", "Сум (UZS)")}</option>
                 <option value="USD">{tr("AQSH dollari (USD / y.e.)", "Доллар США (USD / у.е.)")}</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Kompaniya rekvizitlari */}
+        <div className="p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center border border-purple-100 dark:border-purple-500/20">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-purple-600 dark:text-purple-400">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{tr("Kompaniya rekvizitlari («Biz haqimizda» sahifasi)", "Реквизиты компании (Страница «О нас»)")}</h2>
+              <p className="text-sm text-gray-500">{tr("Saytning /about sahifasida aks etuvchi rasmiy ma'lumotlar", "Официальные данные, отображаемые на странице /about")}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Kompaniya yuridik nomi", "Юридическое название компании")}</label>
+                <input 
+                  type="text" 
+                  placeholder={tr("«Kelajak Uylar» MCHJ", "«Kelajak Uylar» ООО")}
+                  value={companyName}
+                  onChange={e => setCompanyName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("STIR / INN", "ИНН компании (STIR)")}</label>
+                <input 
+                  type="text" 
+                  placeholder={tr("Masalan: 309123456", "Например: 309123456")}
+                  value={companyInn}
+                  onChange={e => setCompanyInn(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Yuridik manzil", "Юридический адрес")}</label>
+              <input 
+                type="text" 
+                placeholder={tr("Toshkent shahri, Chilonzor tumani...", "г. Ташкент, Чиланзарский район...")}
+                value={companyAddress}
+                onChange={e => setCompanyAddress(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Ish vaqti", "Режим работы")}</label>
+              <input 
+                type="text" 
+                placeholder={tr("Dushanba – Shanba, 09:00 – 18:00", "Понедельник – Суббота, 09:00 – 18:00")}
+                value={companyHours}
+                onChange={e => setCompanyHours(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+              />
             </div>
           </div>
         </div>

@@ -93,6 +93,10 @@ model SystemSetting {
   listingActiveDays Int      @default(30)
   telegramBotToken  String?
   telegramChatId    String?
+  companyName       String?  @default("«Kelajak Uylar» MCHJ")
+  companyInn        String?  @default("")
+  companyAddress    String?  @default("")
+  companyHours      String?  @default("Dushanba – Shanba, 09:00 – 18:00")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }

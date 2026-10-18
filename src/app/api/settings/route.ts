@@ -59,6 +59,10 @@ export async function PUT(req: Request) {
         listingActiveDays: body.listingActiveDays,
         telegramBotToken: body.telegramBotToken,
         telegramChatId: body.telegramChatId,
+        companyName: body.companyName,
+        companyInn: body.companyInn,
+        companyAddress: body.companyAddress,
+        companyHours: body.companyHours,
       },
       create: {
         id: "default",
@@ -73,6 +77,10 @@ export async function PUT(req: Request) {
         listingActiveDays: body.listingActiveDays || 30,
         telegramBotToken: body.telegramBotToken,
         telegramChatId: body.telegramChatId,
+        companyName: body.companyName,
+        companyInn: body.companyInn,
+        companyAddress: body.companyAddress,
+        companyHours: body.companyHours,
       }
     });
 
