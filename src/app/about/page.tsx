@@ -11,6 +11,7 @@ interface SystemSettings {
   companyHours?: string;
   contactPhone?: string;
   telegramUrl?: string;
+  telegramBotUrl?: string;
 }
 
 export default function AboutPage() {
@@ -35,7 +36,13 @@ export default function AboutPage() {
   const companyHours = settings?.companyHours?.trim() || (lang === "ru" ? "Понедельник – Суббота, 09:00 – 18:00" : lang === "en" ? "Monday – Saturday, 09:00 – 18:00" : "Dushanba – Shanba, 09:00 – 18:00");
   const contactPhone = settings?.contactPhone?.trim() || "+998 90 123 45 67";
   const cleanPhone = contactPhone.replace(/[^\d+]/g, "");
-  const telegramBotUrl = settings?.telegramUrl?.trim() || "https://t.me/kelajakuylar_sms_bot";
+
+  const telegramChannelUrl = settings?.telegramUrl?.trim() || "";
+  const telegramChannelUsername = telegramChannelUrl.includes("t.me/")
+    ? "@" + telegramChannelUrl.split("t.me/")[1].replace(/\/.*$/, "")
+    : telegramChannelUrl.replace(/^@?/, "@");
+
+  const telegramBotUrl = settings?.telegramBotUrl?.trim() || "https://t.me/kelajakuylar_sms_bot";
   const telegramBotUsername = telegramBotUrl.includes("t.me/")
     ? "@" + telegramBotUrl.split("t.me/")[1].replace(/\/.*$/, "")
     : "@kelajakuylar_sms_bot";
@@ -90,8 +97,16 @@ export default function AboutPage() {
                 <span className="text-gray-500">Режим работы:</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{companyHours}</span>
               </div>
+              {telegramChannelUrl && (
+                <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-gray-200 dark:border-white/5">
+                  <span className="text-gray-500">Telegram канал / профиль:</span>
+                  <a href={telegramChannelUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
+                    {telegramChannelUsername}
+                  </a>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row sm:justify-between py-1">
-                <span className="text-gray-500">Telegram бот:</span>
+                <span className="text-gray-500">Telegram бот (SMS / OTP):</span>
                 <a href={telegramBotUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
                   {telegramBotUsername}
                 </a>
@@ -134,8 +149,16 @@ export default function AboutPage() {
                 <span className="text-gray-500">Working hours:</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{companyHours}</span>
               </div>
+              {telegramChannelUrl && (
+                <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-gray-200 dark:border-white/5">
+                  <span className="text-gray-500">Telegram Channel / Profile:</span>
+                  <a href={telegramChannelUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
+                    {telegramChannelUsername}
+                  </a>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row sm:justify-between py-1">
-                <span className="text-gray-500">Telegram Bot:</span>
+                <span className="text-gray-500">Telegram Bot (SMS / OTP):</span>
                 <a href={telegramBotUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
                   {telegramBotUsername}
                 </a>
@@ -178,8 +201,16 @@ export default function AboutPage() {
                 <span className="text-gray-500">Ish vaqti:</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{companyHours}</span>
               </div>
+              {telegramChannelUrl && (
+                <div className="flex flex-col sm:flex-row sm:justify-between py-1 border-b border-gray-200 dark:border-white/5">
+                  <span className="text-gray-500">Telegram kanal / havola:</span>
+                  <a href={telegramChannelUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
+                    {telegramChannelUsername}
+                  </a>
+                </div>
+              )}
               <div className="flex flex-col sm:flex-row sm:justify-between py-1">
-                <span className="text-gray-500">Telegram bot:</span>
+                <span className="text-gray-500">Telegram bot (SMS / OTP):</span>
                 <a href={telegramBotUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-400 hover:underline">
                   {telegramBotUsername}
                 </a>

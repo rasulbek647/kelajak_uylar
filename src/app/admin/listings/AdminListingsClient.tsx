@@ -23,6 +23,7 @@ export default function AdminListingsClient({ initialListings }: { initialListin
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const filtered = listings.filter(l => {
     const matchesSearch = l.title.toLowerCase().includes(search.toLowerCase()) || l.location.toLowerCase().includes(search.toLowerCase());
@@ -65,23 +66,68 @@ export default function AdminListingsClient({ initialListings }: { initialListin
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onClick={() => setStatusDropdownOpen(false)}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Barcha e'lonlar</h1>
           <p className="text-gray-500 mt-1">Jami: {filtered.length} ta</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <select 
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1e1f23] text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer"
-          >
-            <option value="ALL">Barcha statuslar</option>
-            <option value="PENDING">Kutilmoqda</option>
-            <option value="ACTIVE">Faol</option>
-            <option value="REJECTED">Rad etilgan</option>
-          </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setStatusDropdownOpen(!statusDropdownOpen);
+              }}
+              className="w-full sm:w-auto min-w-[170px] flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1e1f23] text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 font-medium"
+            >
+              <span>
+                {statusFilter === "ALL" && "Barcha statuslar"}
+                {statusFilter === "PENDING" && "Kutilmoqda"}
+                {statusFilter === "ACTIVE" && "Faol"}
+                {statusFilter === "REJECTED" && "Rad etilgan"}
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-3.5 h-3.5 text-gray-400 transition-transform ${statusDropdownOpen ? 'rotate-180' : ''}`}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {statusDropdownOpen && (
+              <div 
+                className="absolute left-0 top-full mt-1.5 w-48 bg-white dark:bg-[#1e1f23] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-1 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-white/5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {[
+                  { value: "ALL", label: "Barcha statuslar" },
+                  { value: "PENDING", label: "Kutilmoqda" },
+                  { value: "ACTIVE", label: "Faol" },
+                  { value: "REJECTED", label: "Rad etilgan" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(opt.value);
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-xs font-semibold transition ${
+                      statusFilter === opt.value
+                        ? "bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 font-bold"
+                        : "text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    {statusFilter === opt.value && (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5 text-yellow-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <input
             type="text"
             placeholder="E'lon nomi yoki manzil..."

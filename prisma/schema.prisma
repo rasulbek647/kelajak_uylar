@@ -86,6 +86,7 @@ model SystemSetting {
   contactPhone      String   @default("+998 90 123 45 67")
   contactPhone2     String?  @default("+998 90 000 00 00")
   telegramUrl       String?
+  telegramBotUrl    String?  @default("https://t.me/kelajakuylar_sms_bot")
   instagramUrl      String?
   defaultCurrency   String   @default("UZS")
   autoApprove       Boolean  @default(false)

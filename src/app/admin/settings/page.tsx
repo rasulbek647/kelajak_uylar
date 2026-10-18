@@ -12,8 +12,10 @@ export default function AdminSettingsPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactPhone2, setContactPhone2] = useState("");
   const [telegramUrl, setTelegramUrl] = useState("");
+  const [telegramBotUrl, setTelegramBotUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [defaultCurrency, setDefaultCurrency] = useState("UZS");
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const [autoApprove, setAutoApprove] = useState(false);
   const [freeListingLimit, setFreeListingLimit] = useState(3);
   const [listingActiveDays, setListingActiveDays] = useState(30);
@@ -39,6 +41,7 @@ export default function AdminSettingsPage() {
           setContactPhone(data.contactPhone || "");
           setContactPhone2(data.contactPhone2 || "");
           setTelegramUrl(data.telegramUrl || "");
+          setTelegramBotUrl(data.telegramBotUrl || "https://t.me/kelajakuylar_sms_bot");
           setInstagramUrl(data.instagramUrl || "");
           setDefaultCurrency(data.defaultCurrency || "UZS");
           setAutoApprove(data.autoApprove || false);
@@ -76,6 +79,7 @@ export default function AdminSettingsPage() {
           contactPhone,
           contactPhone2,
           telegramUrl,
+          telegramBotUrl,
           instagramUrl,
           defaultCurrency,
           autoApprove,
@@ -112,7 +116,7 @@ export default function AdminSettingsPage() {
   const tr = (uz: string, ru: string) => lang === 'ru' ? ru : uz;
 
   return (
-    <div className="space-y-6 max-w-3xl pb-10">
+    <div className="space-y-6 max-w-3xl pb-10" onClick={() => setCurrencyDropdownOpen(false)}>
       <div className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t.settingsTitle}</h1>
@@ -177,12 +181,22 @@ export default function AdminSettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Telegram havola", "Ссылка на Telegram")}</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Telegram kanal / havola", "Ссылка на Telegram канал")}</label>
                 <input 
                   type="url" 
                   placeholder="https://t.me/..."
                   value={telegramUrl}
                   onChange={e => setTelegramUrl(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Telegram bot havola (SMS / OTP)", "Ссылка на Telegram бота (SMS / OTP)")}</label>
+                <input 
+                  type="url" 
+                  placeholder="https://t.me/kelajakuylar_sms_bot"
+                  value={telegramBotUrl}
+                  onChange={e => setTelegramBotUrl(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
                 />
               </div>
@@ -200,14 +214,53 @@ export default function AdminSettingsPage() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{tr("Asosiy valyuta", "Основная валюта")}</label>
-              <select 
-                value={defaultCurrency}
-                onChange={e => setDefaultCurrency(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition appearance-none"
-              >
-                <option value="UZS">{tr("So'm (UZS)", "Сум (UZS)")}</option>
-                <option value="USD">{tr("AQSH dollari (USD / y.e.)", "Доллар США (USD / у.е.)")}</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrencyDropdownOpen(!currencyDropdownOpen);
+                  }}
+                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1e1f23] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 transition text-left"
+                >
+                  <span className="font-medium text-sm">
+                    {defaultCurrency === "UZS" ? tr("So'm (UZS)", "Сум (UZS)") : tr("AQSH dollari (USD / y.e.)", "Доллар США (USD / у.е.)")}
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 text-gray-400 transition-transform ${currencyDropdownOpen ? 'rotate-180' : ''}`}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+
+                {currencyDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#1e1f23] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl py-1 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+                    {[
+                      { value: "UZS", label: tr("So'm (UZS)", "Сум (UZS)") },
+                      { value: "USD", label: tr("AQSH dollari (USD / y.e.)", "Доллар США (USD / у.е.)") }
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setDefaultCurrency(opt.value);
+                          setCurrencyDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-left text-sm transition ${
+                          defaultCurrency === opt.value
+                            ? "bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 font-bold"
+                            : "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {defaultCurrency === opt.value && (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 text-yellow-500">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
