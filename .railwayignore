@@ -1,0 +1,10 @@
+node_modules
+.next
+.env
+*.db
+dev.db
+public/uploads
+prisma/migrations
+.git
+*.log
+coverage

@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  phone     String     @unique
+  password  String
+  name      String
+  region    String?
+  avatar    String?
+  role      String     @default("USER")
+  badge     String     @default("NONE")
+  isRealtor Boolean    @default(false)
+  isVerified Boolean   @default(false)
+  showPhone Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  listings  Listing[]
+  favorites Favorite[]
+  sentMessages     Message[]      @relation("SentMessages")
+  conversations    Conversation[] @relation("ConversationParticipants")
+  userSessions     UserSession[]
+}
+
+model Listing {
+  id          String     @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  currency    String     @default("$")
+  location    String
+  rooms       Int
+  area        Float
+  type        String
+  dealType    String
+  ownerType   String     @default("Rieltor")
+  status      String     @default("PENDING")
+  views       Int        @default(0)
+  amenities   String[]   @default([])
+  isVip       Boolean    @default(false)
+  isTop       Boolean    @default(false)
+  isHidden    Boolean    @default(false)
+  
+  lat         Float?
+  lng         Float?
+  audioUrl    String?
+
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  
+  images      ListingImage[]
+  favoritedBy Favorite[]
+  ratings     Rating[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+}
+
+model SystemSetting {
+  id                String   @id @default("default")
+  siteName          String   @default("Joymee - Ko'chmas mulk")
+  contactPhone      String   @default("+998 90 123 45 67")
+  contactPhone2     String?  @default("+998 90 000 00 00")
+  telegramUrl       String?
+  instagramUrl      String?
+  defaultCurrency   String   @default("UZS")
+  autoApprove       Boolean  @default(false)
+  freeListingLimit  Int      @default(3)
+  listingActiveDays Int      @default(30)
+  telegramBotToken  String?
+  telegramChatId    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+  
+model Report {  
+  id        String   @id @default(cuid())  
+  listingId String  
+  reason    String  
+  note      String?  
+  createdAt DateTime @default(now())  
+} 
+  
+model Rating {  
+  id        String   @id @default(cuid())  
+  listingId String  
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)  
+  stars     Int  
+  comment   String?  
+  createdAt DateTime @default(now())  
+}
+
+model Conversation {
+  id           String    @id @default(cuid())
+  participants User[]    @relation("ConversationParticipants")
+  messages     Message[]
+  listingId    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  text           String
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  userAgent  String
+  device     String
+  ip         String?
+  location   String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
+
