@@ -18,6 +18,7 @@ model User {
   badge     String     @default("NONE")
   isRealtor Boolean    @default(false)
   isVerified Boolean   @default(false)
+  telegramId String?
   showPhone Boolean    @default(true)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -159,4 +160,22 @@ model UserSession {
   lastActive DateTime @default(now())
   createdAt  DateTime @default(now())
 }
+
+model TelegramVerifySession {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  phone       String
+  lang        String    @default("uz")
+  codeHash    String?
+  attempts    Int       @default(0)
+  telegramId  String?
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([phone])
+  @@index([telegramId])
+}
+
 

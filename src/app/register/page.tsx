@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TelegramLoginButton from "@/components/TelegramLoginButton";
@@ -8,10 +8,9 @@ import { useLang } from "@/components/LangProvider";
 
 // Telefon raqamini formatlash: +998 XX XXX XX XX
 function formatPhone(raw: string): string {
-  // Faqat raqamlarni olish (+ va 998 dan keyin)
   const digits = raw.replace(/\D/g, "");
   const local = digits.startsWith("998") ? digits.slice(3) : digits;
-  
+
   let result = "+998";
   if (local.length > 0) result += " " + local.slice(0, 2);
   if (local.length > 2) result += " " + local.slice(2, 5);
@@ -41,29 +40,27 @@ function isValidPassword(password: string): boolean {
   return password.length >= 8 && /[0-9]/.test(password) && /[a-zA-Z]/.test(password);
 }
 
-// Ma'nosiz takrorlanuvchi harflarni aniqlash
-function hasSuspiciousTitle(title: string): boolean {
-  if (title.length < 4) return false;
-  // Bir xil harf 3 marta ketma-ket takrorlansa
-  if (/(.)\1{2,}/i.test(title)) return true;
-  // 10 belgidan kam farqli belgi bo'lsa
-  const unique = new Set(title.toLowerCase().replace(/\s/g, "")).size;
-  if (title.replace(/\s/g, "").length > 6 && unique < 4) return true;
-  return false;
-}
-
 export default function RegisterPage() {
   const router = useRouter();
   const { t, lang } = useLang();
-  
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+998");
-  const [otpCode, setOtpCode] = useState("");
   const [password, setPassword] = useState("");
   const [region, setRegion] = useState("Toshkent");
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  
+
+  // 6 ta alohida OTP katakchalari
+  const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Telegram bot va sessiya holati
+  const [sessionCreated, setSessionCreated] = useState(false);
+  const [botLoading, setBotLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isExpired, setIsExpired] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,9 +81,24 @@ export default function RegisterPage() {
   const strengthColor = ["", "bg-red-500", "bg-yellow-400", "bg-green-500"][passwordStrength];
   const strengthTextColor = ["", "text-red-400", "text-yellow-400", "text-green-400"][passwordStrength];
 
+  // Forma to'g'ri to'ldirilganmi tekshiruvi (Telegram tugmasini faollashtirish uchun)
+  const isFormValidForBot =
+    name.trim().length > 0 &&
+    isValidPhone(phone) &&
+    isValidPassword(password) &&
+    agreedToTerms;
+
+  // 60 soniyalik qayta yuborish taymeri
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
   const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    // Agar +998 dan o'chirishga urinsa, bloklaymiz
     if (!raw.startsWith("+998")) {
       setPhone("+998");
       return;
@@ -110,10 +122,107 @@ export default function RegisterPage() {
     }
   }, [t]);
 
+  // "Telegram botni ochish" bosilganda
+  const handleOpenTelegramBot = async () => {
+    if (!isFormValidForBot || botLoading || resendCooldown > 0) return;
+
+    setError("");
+    setBotLoading(true);
+    setIsExpired(false);
+
+    try {
+      const cleanPhone = phone.replace(/\s+/g, "");
+      const res = await fetch("/api/otp/telegram-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          lang,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || (lang === "ru" ? "Xatolik yuz berdi" : "An error occurred"));
+        setBotLoading(false);
+        return;
+      }
+
+      setSessionCreated(true);
+      setResendCooldown(60); // 60 soniya qayta yuborishni kutish
+
+      // 5 daqiqadan so'ng muddati o'tgan deb belgilash
+      setTimeout(() => {
+        setIsExpired(true);
+      }, 5 * 60 * 1000);
+
+      // Telegram botni yangi oynada ochish
+      if (data.botUrl) {
+        window.open(data.botUrl, "_blank", "noopener,noreferrer");
+      }
+
+      // Birinchi katakka fokus berish
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 300);
+    } catch {
+      setError(lang === "ru" ? "Ошибка сети" : lang === "en" ? "Network error" : "Tarmoq xatosi");
+    } finally {
+      setBotLoading(false);
+    }
+  };
+
+  // OTP katakchalarini boshqarish
+  const handleOtpDigitChange = (index: number, val: string) => {
+    const digitsOnly = val.replace(/\D/g, "");
+    if (!digitsOnly) {
+      const updated = [...otpDigits];
+      updated[index] = "";
+      setOtpDigits(updated);
+      return;
+    }
+
+    const digit = digitsOnly.slice(-1);
+    const updated = [...otpDigits];
+    updated[index] = digit;
+    setOtpDigits(updated);
+
+    // Keyingi katakchaga avtomatik o'tish
+    if (index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Nusxalangan kodni joylashtirish (Paste)
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const updated = [...otpDigits];
+    for (let i = 0; i < 6; i++) {
+      updated[i] = pasted[i] || "";
+    }
+    setOtpDigits(updated);
+
+    const nextIndex = Math.min(pasted.length, 5);
+    inputRefs.current[nextIndex]?.focus();
+  };
+
+  // Ro'yxatdan o'tish formasi yuborilganda
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !otpCode) {
+
+    const fullCode = otpDigits.join("");
+
+    if (!name || fullCode.length !== 6) {
       setError(t.allFieldsRequired);
       return;
     }
@@ -132,7 +241,7 @@ export default function RegisterPage() {
       setError(t.fillTerms);
       return;
     }
-    
+
     setError("");
     setLoading(true);
 
@@ -141,18 +250,21 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           phone: phone.replace(/\s+/g, ""),
-          otpCode,
+          otpCode: fullCode,
           password,
-          region
-        })
+          region,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || (lang === "ru" ? "Произошла ошибка" : lang === "en" ? "An error occurred" : "Xatolik yuz berdi"));
+        setError(
+          data.message ||
+            (lang === "ru" ? "Произошла ошибка" : lang === "en" ? "An error occurred" : "Xatolik yuz berdi")
+        );
       } else {
         setSuccess(t.registerSuccess);
         setTimeout(() => {
@@ -169,7 +281,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen relative bg-[#1a1b1e]">
       <div className="w-full flex flex-col items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-[360px]">
+        <div className="w-full max-w-[380px]">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-6">
             <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-400/20">
@@ -275,7 +387,7 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              
+
               {/* Parol kuchi indikatori */}
               {password.length > 0 && (
                 <div className="mt-2">
@@ -298,45 +410,6 @@ export default function RegisterPage() {
               {/* Parol talablari */}
               <p className="text-gray-500 text-xs mt-1.5 ml-1">{t.passwordRequirements}</p>
               {passwordError && <p className="text-red-400 text-xs mt-1 ml-1">{passwordError}</p>}
-            </div>
-
-            {/* OTP Kodi */}
-            <div className="pt-2 border-t border-gray-700">
-              <label className="block text-[13px] font-bold text-yellow-400 mb-2">
-                📱 {t.confirmCodeLabel}
-              </label>
-              <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-                {t.getOtpHint}{" "}
-                <a
-                  href="https://t.me/kelajakuylar_sms_bot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline font-medium"
-                >
-                  @kelajakuylar_sms_bot
-                </a>
-              </p>
-              {/* Telegram'ga to'g'ridan-to'g'ri havola */}
-              <a
-                href="https://t.me/kelajakuylar_sms_bot?start=register"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full h-11 mb-3 rounded-xl bg-[#229ED9]/15 border border-[#229ED9]/30 text-[#229ED9] font-semibold text-sm hover:bg-[#229ED9]/25 transition-colors"
-              >
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/>
-                </svg>
-                {lang === "ru" ? "Открыть Telegram бот" : lang === "en" ? "Open Telegram bot" : "Telegram botni ochish"}
-              </a>
-              <input
-                type="text"
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="w-full h-12 bg-[#2c2d31] border border-gray-600 rounded-xl px-4 text-white font-bold text-center tracking-[0.5em] text-lg focus:outline-none focus:border-yellow-400 transition-colors"
-                placeholder="1 2 3 4 5"
-                maxLength={6}
-                inputMode="numeric"
-              />
             </div>
 
             {/* Oferta Checkbox */}
@@ -366,18 +439,87 @@ export default function RegisterPage() {
               </span>
             </label>
 
-            {/* Xato va muvaffaqiyat xabarlari */}
+            {/* OTP Bo'limi (Telegram Bot orqali 1-bosish deep link) */}
+            <div className="pt-3 border-t border-gray-700/80">
+              <label className="block text-[13px] font-bold text-yellow-400 mb-1.5">
+                📱 {t.confirmCodeLabel}
+              </label>
+
+              {/* Tushuntirish matni */}
+              <p className="text-xs text-gray-400 mb-3 leading-relaxed">
+                {sessionCreated ? t.getOtpHintAfter : t.getOtpHintBefore}
+              </p>
+
+              {/* Telegram botni ochish tugmasi */}
+              <button
+                type="button"
+                onClick={handleOpenTelegramBot}
+                disabled={!isFormValidForBot || botLoading || resendCooldown > 0}
+                className={`flex items-center justify-center gap-2 w-full h-11 mb-3 rounded-xl font-semibold text-sm transition-all ${
+                  isFormValidForBot && resendCooldown === 0 && !botLoading
+                    ? "bg-[#229ED9]/15 border border-[#229ED9]/40 text-[#229ED9] hover:bg-[#229ED9]/25 cursor-pointer shadow-sm shadow-[#229ED9]/10"
+                    : "bg-gray-800/60 border border-gray-700 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                {botLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-[#229ED9]/30 border-t-[#229ED9] rounded-full animate-spin" />
+                    {t.waiting}
+                  </span>
+                ) : resendCooldown > 0 ? (
+                  <span>{t.resendWait.replace("{s}", resendCooldown.toString())}</span>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.203-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/>
+                    </svg>
+                    <span>{sessionCreated ? t.resendCode : t.openTelegramBot}</span>
+                  </>
+                )}
+              </button>
+
+              {/* 5 daqiqalik amal qilish muddati tugaganlik ogohlantirishi */}
+              {isExpired && (
+                <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs text-center font-medium">
+                  ⚠️ {t.codeExpired}
+                </div>
+              )}
+
+              {/* 6 ta alohida katakcha */}
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1" onPaste={handleOtpPaste}>
+                {otpDigits.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => {
+                      inputRefs.current[idx] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                    className="w-12 h-13 sm:w-13 sm:h-14 bg-[#2c2d31] border border-gray-600 rounded-xl text-center text-xl sm:text-2xl font-black text-white focus:outline-none focus:border-yellow-400 focus:bg-[#34353a] transition-all"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Xato xabarlari */}
             {error && (
-              <p className="text-red-400 text-sm text-center font-medium bg-red-500/10 rounded-xl p-3">{error}</p>
+              <p className="text-red-400 text-sm text-center font-medium bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                {error}
+              </p>
             )}
 
             {/* Ro'yxatdan o'tish tugmasi */}
             <button
               type="submit"
-              disabled={loading || !agreedToTerms}
+              disabled={loading || !agreedToTerms || otpDigits.join("").length !== 6}
               className={`w-full h-12 font-bold rounded-full transition-all mt-1 ${
-                agreedToTerms && !loading
-                  ? "bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer"
+                agreedToTerms && !loading && otpDigits.join("").length === 6
+                  ? "bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer shadow-lg shadow-yellow-400/20"
                   : "bg-gray-700 text-gray-500 cursor-not-allowed"
               }`}
             >
@@ -403,7 +545,7 @@ export default function RegisterPage() {
               {t.alreadyHaveAccount}
             </Link>
 
-            <TelegramLoginButton 
+            <TelegramLoginButton
               onSuccess={(phone) => {
                 router.push(`/login?tg=1&phone=${encodeURIComponent(phone)}`);
               }}
