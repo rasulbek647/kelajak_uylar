@@ -1,11 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TelegramLoginButton from "@/components/TelegramLoginButton";
 import { useLang } from "@/components/LangProvider";
+
+// Telefon raqamini formatlash: +998 XX XXX XX XX
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  const local = digits.startsWith("998") ? digits.slice(3) : digits;
+
+  let result = "+998";
+  if (local.length > 0) result += " " + local.slice(0, 2);
+  if (local.length > 2) result += " " + local.slice(2, 5);
+  if (local.length > 5) result += " " + local.slice(5, 7);
+  if (local.length > 7) result += " " + local.slice(7, 9);
+  return result;
+}
+
+function isValidPhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  return digits.startsWith("998") && digits.length === 12;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,7 +31,7 @@ export default function LoginPage() {
   
   // Step 1: Telefon, Step 2: Parol
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+998");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,10 +39,35 @@ export default function LoginPage() {
   // Modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const queryPhone = params.get("phone");
+      if (queryPhone) {
+        setPhone(formatPhone(queryPhone));
+      }
+    }
+  }, []);
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (!raw.startsWith("+998")) {
+      setPhone("+998");
+      return;
+    }
+    setPhone(formatPhone(raw));
+  };
+
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim()) {
-      setError(lang === "ru" ? "Введите логин/номер телефона" : lang === "en" ? "Enter login/phone number" : "Login/telefon raqamni kiriting");
+    if (!isValidPhone(phone)) {
+      setError(
+        lang === "ru"
+          ? "Неверный формат номера. Например: +998 90 123 45 67"
+          : lang === "en"
+          ? "Invalid phone format. E.g.: +998 90 123 45 67"
+          : "Telefon raqam formati noto'g'ri. Masalan: +998 90 123 45 67"
+      );
       return;
     }
     setError("");
@@ -53,7 +96,7 @@ export default function LoginPage() {
 
     const res = await signIn("credentials", {
       redirect: false,
-      phone: phone.trim(),
+      phone: phone.replace(/\s+/g, ""),
       password,
       userAgent,
       ip,
@@ -186,11 +229,12 @@ export default function LoginPage() {
               <div>
                 <label className="block text-[13px] font-bold text-white mb-2">{t.phoneInput}</label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={handlePhoneChange}
                   className="w-full h-12 bg-transparent border border-gray-600 rounded-xl px-4 text-white font-medium focus:outline-none focus:border-white transition-colors"
-                  placeholder={lang === "ru" ? "+998 90 123 45 67 или логин" : lang === "en" ? "+998 90 123 45 67 or login" : "+998 90 123 45 67 yoki login"}
+                  placeholder="+998 90 123 45 67"
                 />
               </div>
             ) : (

@@ -14,21 +14,21 @@ const TG_MAX_ACCOUNTS_PER_USER = parseInt(process.env.TG_MAX_ACCOUNTS_PER_USER |
 
 const BOT_TEXTS = {
   uz: {
-    codeMsg: (code: string) => `✅ Tasdiqlash kodingiz: \`${code}\`\n\nKod 5 daqiqa amal qiladi. Uni saytga kiriting.`,
+    codeMsg: (code: string) => `\`${code}\``,
     copyBtn: "📋 Kodni nusxalash",
     expired: "⚠️ Havola eskirgan yoki yaroqsiz. Saytdan qaytadan urinib ko'ring.",
     rateLimit: "⚠️ Juda ko'p so'rov yuborildi. Iltimos, birozdan so'ng qayta urinib ko'ring.",
     limitReached: "⚠️ Bu Telegram akkauntiga ulangan hisoblar soni maksimal chegaraga yetgan.",
   },
   ru: {
-    codeMsg: (code: string) => `✅ Ваш код подтверждения: \`${code}\`\n\nКод действителен 5 минут. Введите его на сайте.`,
+    codeMsg: (code: string) => `\`${code}\``,
     copyBtn: "📋 Скопировать код",
     expired: "⚠️ Ссылка устарела или недействительна. Попробуйте снова на сайте.",
     rateLimit: "⚠️ Слишком много запросов. Пожалуйста, подождите немного.",
     limitReached: "⚠️ Достигнут лимит учетных записей для этого Telegram аккаунта.",
   },
   en: {
-    codeMsg: (code: string) => `✅ Your verification code: \`${code}\`\n\nCode is valid for 5 minutes. Enter it on the website.`,
+    codeMsg: (code: string) => `\`${code}\``,
     copyBtn: "📋 Copy code",
     expired: "⚠️ Link is expired or invalid. Please try again on the website.",
     rateLimit: "⚠️ Too many requests. Please try again shortly.",
@@ -233,11 +233,26 @@ export async function POST(req: Request) {
           create: { phone, code, expiresAt },
         });
 
-        await sendTelegramMessage(
-          chatId,
-          `✅ Sizning tasdiqlash kodingiz:\n\n\`${code}\`\n\nKodni saytga kiriting. Kod *${OTP_EXPIRE_MINUTES} daqiqa* davomida amal qiladi.`,
-          { reply_markup: { remove_keyboard: true } }
-        );
+        const inlineMarkup = {
+          inline_keyboard: [
+            [
+              {
+                text: "📋 Kodni nusxalash",
+                copy_text: { text: code },
+              },
+            ],
+          ],
+        };
+
+        const sendResult = await sendTelegramMessage(chatId, `\`${code}\``, {
+          reply_markup: inlineMarkup,
+        });
+
+        if (!sendResult || !sendResult.ok) {
+          await sendTelegramMessage(chatId, `\`${code}\``, {
+            reply_markup: { remove_keyboard: true },
+          });
+        }
         return NextResponse.json({ ok: true });
       }
     }

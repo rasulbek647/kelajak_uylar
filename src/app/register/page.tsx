@@ -48,8 +48,36 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState("+998");
   const [password, setPassword] = useState("");
   const [region, setRegion] = useState("Toshkent");
+  const [regionOpen, setRegionOpen] = useState(false);
+  const regionRef = useRef<HTMLDivElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const REGIONS = [
+    "Toshkent",
+    "Samarqand",
+    "Buxoro",
+    "Farg'ona",
+    "Andijon",
+    "Namangan",
+    "Xorazm",
+    "Qashqadaryo",
+    "Surxondaryo",
+    "Navoiy",
+    "Jizzax",
+    "Sirdaryo",
+  ];
+
+  // Tashqariga bosilganda viloyat menyusini yopish
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (regionRef.current && !regionRef.current.contains(event.target as Node)) {
+        setRegionOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // 6 ta alohida OTP katakchalari
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
@@ -332,27 +360,57 @@ export default function RegisterPage() {
               {phoneError && <p className="text-red-400 text-xs mt-1.5 ml-1">{phoneError}</p>}
             </div>
 
-            {/* Viloyat */}
-            <div>
+            {/* Viloyat (Fonga mos maxsus dropdown) */}
+            <div className="relative" ref={regionRef}>
               <label className="block text-[13px] font-bold text-white mb-2">{t.region}</label>
-              <select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                className="w-full h-12 bg-[#2c2d31] border border-gray-600 rounded-xl px-4 text-white font-medium focus:outline-none focus:border-white transition-colors"
+              <button
+                type="button"
+                onClick={() => setRegionOpen((prev) => !prev)}
+                className="w-full h-12 bg-[#2c2d31] border border-gray-600 rounded-xl px-4 text-white font-medium flex items-center justify-between focus:outline-none focus:border-yellow-400 hover:border-gray-500 transition-colors cursor-pointer text-left"
               >
-                <option value="Toshkent">Toshkent</option>
-                <option value="Samarqand">Samarqand</option>
-                <option value="Buxoro">Buxoro</option>
-                <option value="Farg'ona">Farg&apos;ona</option>
-                <option value="Andijon">Andijon</option>
-                <option value="Namangan">Namangan</option>
-                <option value="Xorazm">Xorazm</option>
-                <option value="Qashqadaryo">Qashqadaryo</option>
-                <option value="Surxondaryo">Surxondaryo</option>
-                <option value="Navoiy">Navoiy</option>
-                <option value="Jizzax">Jizzax</option>
-                <option value="Sirdaryo">Sirdaryo</option>
-              </select>
+                <span>{region}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${regionOpen ? "rotate-180 text-yellow-400" : ""}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              {regionOpen && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-[#2c2d31] border border-gray-600 rounded-xl shadow-2xl overflow-hidden z-50 max-h-56 overflow-y-auto divide-y divide-gray-700/50">
+                  {REGIONS.map((r) => {
+                    const isSelected = r === region;
+                    return (
+                      <div
+                        key={r}
+                        onClick={() => {
+                          setRegion(r);
+                          setRegionOpen(false);
+                        }}
+                        className={`px-4 py-3 text-sm font-medium cursor-pointer flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? "bg-yellow-400/15 text-yellow-400 font-bold"
+                            : "text-gray-200 hover:bg-[#38393e] hover:text-white"
+                        }`}
+                      >
+                        <span>{r}</span>
+                        {isSelected && (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-yellow-400">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Parol */}
