@@ -307,7 +307,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen relative bg-[#1a1b1e]">
+    <div className="flex min-h-screen relative bg-[#1a1b1e] notranslate" translate="no">
       <div className="w-full flex flex-col items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-[380px]">
           {/* Logo */}

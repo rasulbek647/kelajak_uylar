@@ -112,7 +112,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen relative">
+    <div className="flex min-h-screen relative notranslate" translate="no">
     
       {/* Telefon tasdiqlash modali */}
       {showConfirmModal && (
