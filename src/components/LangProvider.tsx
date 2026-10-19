@@ -52,6 +52,9 @@ export function LangProvider({
       if (resolved !== lang) {
         setLangState(resolved);
       }
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = resolved;
+      }
       // Cookie ni har doim yangilab (1 yil muddat bilan) saqlab qo'yamiz
       if (!cookieLang || cookieLang !== resolved) {
         document.cookie = `joymee_lang=${resolved}; path=/; max-age=31536000; SameSite=Lax`;
@@ -61,6 +64,9 @@ export function LangProvider({
       // Cookie umuman bo'lmasa, initialLang ni cookie ga yozib qo'yamiz
       document.cookie = `joymee_lang=${initialLang}; path=/; max-age=31536000; SameSite=Lax`;
       document.cookie = `lang=${initialLang}; path=/; max-age=31536000; SameSite=Lax`;
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = initialLang;
+      }
     }
 
     try {
@@ -89,6 +95,7 @@ export function LangProvider({
     if (typeof document !== 'undefined') {
       document.cookie = `joymee_lang=${l}; path=/; max-age=31536000; SameSite=Lax`;
       document.cookie = `lang=${l}; path=/; max-age=31536000; SameSite=Lax`;
+      document.documentElement.lang = l;
     }
     window.dispatchEvent(new CustomEvent('kelajak_lang_change', { detail: l }));
   };

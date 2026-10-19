@@ -50,8 +50,12 @@ export default async function RootLayout({
   const initialLang: Lang = (rawLang === "ru" || rawLang === "en" || rawLang === "uz") ? rawLang : "uz";
 
   return (
-    <html lang={initialLang} className={`${geistSans.variable} antialiased h-full`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-gray-50 dark:bg-[#111113] text-gray-900 dark:text-white transition-colors duration-200">
+    <html lang={initialLang} translate="no" className={`${geistSans.variable} antialiased h-full notranslate`} suppressHydrationWarning>
+      <head>
+        <meta name="google" content="notranslate" />
+        <meta name="yandex" content="notranslate" />
+      </head>
+      <body className="min-h-full flex flex-col bg-gray-50 dark:bg-[#111113] text-gray-900 dark:text-white transition-colors duration-200 notranslate" translate="no">
         <ThemeScript />
         <PwaRegister />
         <Providers initialLang={initialLang}>
