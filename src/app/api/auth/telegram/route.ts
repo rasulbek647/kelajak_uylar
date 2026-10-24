@@ -5,7 +5,8 @@ import { createTelegramLoginToken } from "@/lib/auth-secret";
 
 export async function POST(req: Request) {
   try {
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const rawBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
+    const BOT_TOKEN = rawBotToken.trim().replace(/^[\"']|[\"']$/g, "");
     if (!BOT_TOKEN) {
       console.error("TELEGRAM_BOT_TOKEN sozlanmagan");
       return NextResponse.json({ message: "Telegram bot konfiguratsiya qilinmagan" }, { status: 500 });

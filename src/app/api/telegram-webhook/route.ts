@@ -3,7 +3,8 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
 // Telegram bot token — faqat .env dan olinadi
-const botToken = process.env.TELEGRAM_BOT_TOKEN || "";
+const rawBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
+const botToken = rawBotToken.trim().replace(/^[\"']|[\"']$/g, "");
 
 // Rate limit sozlamalari
 const OTP_RATE_LIMIT_PER_HOUR = 5;

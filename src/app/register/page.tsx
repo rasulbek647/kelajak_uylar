@@ -9,7 +9,7 @@ import { useLang } from "@/components/LangProvider";
 // Telefon raqamini formatlash: +998 XX XXX XX XX
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
-  const local = digits.startsWith("998") ? digits.slice(3) : digits;
+  const local = digits.startsWith("998") ? digits.slice(3, 12) : digits.slice(0, 9);
 
   let result = "+998";
   if (local.length > 0) result += " " + local.slice(0, 2);
@@ -17,6 +17,21 @@ function formatPhone(raw: string): string {
   if (local.length > 5) result += " " + local.slice(5, 7);
   if (local.length > 7) result += " " + local.slice(7, 9);
   return result;
+}
+
+function getFormattedCursor(raw: string, cursor: number, formatted: string): number {
+  const digitsBefore = raw.slice(0, cursor).replace(/\D/g, "").length;
+  if (digitsBefore === 0) return 4;
+  let count = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) {
+      count++;
+      if (count === digitsBefore) {
+        return i + 1;
+      }
+    }
+  }
+  return formatted.length;
 }
 
 // Telefon raqami to'g'riligini tekshirish
@@ -88,6 +103,8 @@ export default function RegisterPage() {
   const [botLoading, setBotLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
+  const [botUrl, setBotUrl] = useState("");
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -125,20 +142,41 @@ export default function RegisterPage() {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (!raw.startsWith("+998")) {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const oldVal = phone;
+    let raw = input.value;
+    let cursor = input.selectionStart ?? raw.length;
+
+    if (oldVal.length > raw.length) {
+      const deletedChar = oldVal[cursor];
+      if (deletedChar === " ") {
+        const beforeCursor = raw.slice(0, cursor > 0 ? cursor - 1 : 0);
+        const afterCursor = raw.slice(cursor);
+        raw = beforeCursor + afterCursor;
+        cursor = Math.max(4, cursor - 1);
+      }
+    }
+
+    const digits = raw.replace(/\D/g, "");
+    if (!digits.startsWith("998") && digits.length < 3) {
       setPhone("+998");
       return;
     }
+
     const formatted = formatPhone(raw);
+    const newCursor = getFormattedCursor(raw, cursor, formatted);
+
     setPhone(formatted);
-    if (formatted.length > 4 && !isValidPhone(formatted)) {
-      setPhoneError(t.phoneInvalidFormat);
-    } else {
-      setPhoneError("");
-    }
-  }, [t]);
+    if (phoneError) setPhoneError("");
+    if (alreadyRegistered) setAlreadyRegistered(false);
+
+    requestAnimationFrame(() => {
+      if (input && document.activeElement === input) {
+        input.setSelectionRange(newCursor, newCursor);
+      }
+    });
+  };
 
   const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -155,6 +193,7 @@ export default function RegisterPage() {
     if (!isFormValidForBot || botLoading || resendCooldown > 0) return;
 
     setError("");
+    setAlreadyRegistered(false);
     setBotLoading(true);
     setIsExpired(false);
 
@@ -172,6 +211,9 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 400 && typeof data.message === "string" && data.message.includes("oldin")) {
+          setAlreadyRegistered(true);
+        }
         setError(data.message || (lang === "ru" ? "Xatolik yuz berdi" : "An error occurred"));
         setBotLoading(false);
         return;
@@ -179,6 +221,9 @@ export default function RegisterPage() {
 
       setSessionCreated(true);
       setResendCooldown(60); // 60 soniya qayta yuborishni kutish
+      if (data.botUrl) {
+        setBotUrl(data.botUrl);
+      }
 
       // 5 daqiqadan so'ng muddati o'tgan deb belgilash
       setTimeout(() => {
@@ -351,10 +396,19 @@ export default function RegisterPage() {
                 type="tel"
                 value={phone}
                 onChange={handlePhoneChange}
+                onBlur={() => {
+                  if (phone.length > 4 && !isValidPhone(phone)) {
+                    setPhoneError(t.phoneInvalidFormat);
+                  } else {
+                    setPhoneError("");
+                  }
+                }}
                 className={`w-full h-12 bg-transparent border rounded-xl px-4 text-white font-medium focus:outline-none transition-colors ${
                   phoneError ? "border-red-500 focus:border-red-400" : "border-gray-600 focus:border-white"
                 }`}
                 placeholder="+998 90 123 45 67"
+                maxLength={17}
+                autoComplete="tel"
                 inputMode="numeric"
               />
               {phoneError && <p className="text-red-400 text-xs mt-1.5 ml-1">{phoneError}</p>}
@@ -535,6 +589,31 @@ export default function RegisterPage() {
                   </>
                 )}
               </button>
+
+              {/* Allaqachon ro'yxatdan o'tilgan bo'lsa kirishga havola */}
+              {alreadyRegistered && (
+                <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs text-center font-medium animate-fadeIn">
+                  <p>⚠️ {lang === "ru" ? "Этот номер уже зарегистрирован." : lang === "en" ? "This phone number is already registered." : "Bu raqam allaqachon ro'yxatdan o'tgan."}</p>
+                  <Link
+                    href={`/login?phone=${encodeURIComponent(phone.replace(/\s+/g, ""))}`}
+                    className="inline-block mt-2 px-3 py-1 bg-yellow-400 text-black font-bold rounded-lg text-xs hover:bg-yellow-500 transition-colors"
+                  >
+                    👉 {lang === "ru" ? "Войти в аккаунт" : lang === "en" ? "Log in to account" : "Hisobga kirish"}
+                  </Link>
+                </div>
+              )}
+
+              {/* Telegram bot ochilmagan bo'lsa to'g'ridan-to'g'ri havola */}
+              {botUrl && !alreadyRegistered && (
+                <a
+                  href={botUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 w-full py-2 mb-3 rounded-lg bg-[#229ED9]/10 border border-[#229ED9]/30 text-[#229ED9] hover:bg-[#229ED9]/20 text-xs font-semibold transition-colors"
+                >
+                  <span>↗️ {lang === "ru" ? "Telegram botni ochish (to'g'ridan-to'g'ri havola)" : lang === "en" ? "Open Telegram bot directly" : "Telegram botni ochish (to'g'ridan-to'g'ri havola)"}</span>
+                </a>
+              )}
 
               {/* 5 daqiqalik amal qilish muddati tugaganlik ogohlantirishi */}
               {isExpired && (

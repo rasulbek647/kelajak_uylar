@@ -10,7 +10,7 @@ import { useLang } from "@/components/LangProvider";
 // Telefon raqamini formatlash: +998 XX XXX XX XX
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
-  const local = digits.startsWith("998") ? digits.slice(3) : digits;
+  const local = digits.startsWith("998") ? digits.slice(3, 12) : digits.slice(0, 9);
 
   let result = "+998";
   if (local.length > 0) result += " " + local.slice(0, 2);
@@ -18,6 +18,21 @@ function formatPhone(raw: string): string {
   if (local.length > 5) result += " " + local.slice(5, 7);
   if (local.length > 7) result += " " + local.slice(7, 9);
   return result;
+}
+
+function getFormattedCursor(raw: string, cursor: number, formatted: string): number {
+  const digitsBefore = raw.slice(0, cursor).replace(/\D/g, "").length;
+  if (digitsBefore === 0) return 4;
+  let count = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) {
+      count++;
+      if (count === digitsBefore) {
+        return i + 1;
+      }
+    }
+  }
+  return formatted.length;
 }
 
 function isValidPhone(phone: string): boolean {
@@ -49,13 +64,39 @@ export default function LoginPage() {
     }
   }, []);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    if (!raw.startsWith("+998")) {
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const oldVal = phone;
+    let raw = input.value;
+    let cursor = input.selectionStart ?? raw.length;
+
+    // Agar bo'sh joy o'chirilgan bo'lsa (masalan backspace bosilganda), oldingi raqamni ham o'chiramiz
+    if (oldVal.length > raw.length) {
+      const deletedChar = oldVal[cursor];
+      if (deletedChar === " ") {
+        const beforeCursor = raw.slice(0, cursor > 0 ? cursor - 1 : 0);
+        const afterCursor = raw.slice(cursor);
+        raw = beforeCursor + afterCursor;
+        cursor = Math.max(4, cursor - 1);
+      }
+    }
+
+    const digits = raw.replace(/\D/g, "");
+    if (!digits.startsWith("998") && digits.length < 3) {
       setPhone("+998");
       return;
     }
-    setPhone(formatPhone(raw));
+
+    const formatted = formatPhone(raw);
+    const newCursor = getFormattedCursor(raw, cursor, formatted);
+
+    setPhone(formatted);
+
+    requestAnimationFrame(() => {
+      if (input && document.activeElement === input) {
+        input.setSelectionRange(newCursor, newCursor);
+      }
+    });
   };
 
   const handleNext = (e: React.FormEvent) => {
@@ -235,6 +276,8 @@ export default function LoginPage() {
                   onChange={handlePhoneChange}
                   className="w-full h-12 bg-transparent border border-gray-600 rounded-xl px-4 text-white font-medium focus:outline-none focus:border-white transition-colors"
                   placeholder="+998 90 123 45 67"
+                  maxLength={17}
+                  autoComplete="tel"
                 />
               </div>
             ) : (

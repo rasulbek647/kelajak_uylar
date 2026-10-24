@@ -7,7 +7,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Ruxsat yo'q. Faqat admin uchun." }, { status: 403 });
   }
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const rawBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
+  const botToken = rawBotToken.trim().replace(/^[\"']|[\"']$/g, "");
   if (!botToken) {
     return NextResponse.json({ message: "TELEGRAM_BOT_TOKEN topilmadi" }, { status: 500 });
   }
