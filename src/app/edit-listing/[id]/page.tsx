@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { validateListingNumbers, normalizeCurrency } from "@/lib/listing-validation";
 
 const LocationPickerWrapper = dynamic(
   () => import("@/components/LocationPickerWrapper"),
@@ -48,7 +49,7 @@ export default function EditListingPage() {
   const [floor, setFloor] = useState("");
   const [totalFloors, setTotalFloors] = useState("");
   const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState("$");
+  const [currency, setCurrency] = useState("so'm");
   const [region, setRegion] = useState("");
   const [district, setDistrict] = useState("");
   const [lat, setLat] = useState<number>(41.2995);
@@ -94,7 +95,7 @@ export default function EditListingPage() {
           setRooms(l.rooms != null ? String(l.rooms) : "");
           setArea(l.area != null ? String(l.area) : "");
           setPrice(l.price != null ? String(l.price) : "");
-          setCurrency(l.currency || "$");
+          setCurrency(normalizeCurrency(l.currency));
           setAmenities(Array.isArray(l.amenities) ? l.amenities : []);
           if (l.location) {
             const parts = l.location.split(", ");
@@ -154,6 +155,11 @@ export default function EditListingPage() {
     if (!price || String(price).trim() === "") return setError("Narx kiriting");
     if (!region) return setError("Viloyat tanlang");
     if (!district) return setError("Tuman/shahar kiriting");
+    
+    const valResult = validateListingNumbers({ price, currency, area, rooms });
+    if (!valResult.valid) {
+      return setError(valResult.error || "Maydonlar noto'g'ri to'ldirilgan");
+    }
     if (existingImages.length + newImages.length === 0) return setError("Kamida 1 ta rasm qoldiring");
 
     setSaving(true);
@@ -176,11 +182,11 @@ export default function EditListingPage() {
         body: JSON.stringify({
           title,
           description,
-          price: parseFloat(price),
-          currency,
+          price: valResult.numPrice,
+          currency: valResult.normalizedCurrency,
           location: `${region}, ${district}`,
-          rooms: parseInt(rooms) || 0,
-          area: parseFloat(area) || 0,
+          rooms: valResult.numRooms,
+          area: valResult.numArea,
           type: propertyType,
           dealType,
           ownerType,
@@ -325,9 +331,9 @@ export default function EditListingPage() {
             <h2 className="font-bold text-gray-900 dark:text-white">Narx</h2>
             <div className="flex flex-col sm:flex-row gap-3">
               <input type="number" min="0" value={price} onChange={e => setPrice(e.target.value)} className={inputClass} style={{flex: '1 1 auto'}} placeholder="Masalan: 15000" />
-              <select value={currency} onChange={e => setCurrency(e.target.value)} className={inputClass + " sm:max-w-[120px]"}>
-                <option value="$">$ (USD)</option>
-                <option value="so'm">so'm (UZS)</option>
+              <select value={currency} onChange={e => setCurrency(e.target.value)} className={inputClass + " sm:max-w-[140px]"}>
+                <option value="so'm">so'm</option>
+                <option value="y.e">y.e ($)</option>
               </select>
             </div>
           </div>

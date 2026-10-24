@@ -8,6 +8,7 @@ import Link from "next/link";
 import { UZBEKISTAN_REGIONS } from "@/data/uzbekistan";
 import AudioRecorder from "@/components/AudioRecorder";
 import { useLang } from "@/components/LangProvider";
+import { validateListingNumbers } from "@/lib/listing-validation";
 
 const LocationPickerWrapper = dynamic(
   () => import("@/components/LocationPickerWrapper"),
@@ -127,7 +128,26 @@ export default function AddListingPage() {
       }
 
       const finalLocation = `${region}, ${district}`;
-      const finalDescription = `${description}\n---\nJoylashtirdi: ${ownerType}\nKvartira turi: ${condition}\nTa'mir: ${renovation}\nQavat: ${floor}/${totalFloors}\nTelefon: ${phone}\n`;
+      const extraDetails: string[] = [];
+      if ((selectedType || "Kvartira") === "Kvartira" && condition && condition.trim()) {
+        extraDetails.push(`Kvartira turi: ${condition.trim()}`);
+      }
+      if (renovation && renovation.trim()) {
+        extraDetails.push(`Ta'mir: ${renovation.trim()}`);
+      }
+      if (floor && totalFloors) {
+        extraDetails.push(`Qavat: ${floor}/${totalFloors}`);
+      } else if (floor) {
+        extraDetails.push(`Qavat: ${floor}`);
+      }
+      if (phone && phone.trim()) {
+        extraDetails.push(`Telefon: ${phone.trim()}`);
+      }
+
+      const baseDesc = (description || "").trim();
+      const finalDescription = extraDetails.length > 0
+        ? (baseDesc ? `${baseDesc}\n---\n${extraDetails.join("\n")}` : extraDetails.join("\n"))
+        : baseDesc;
 
       const listingData = {
         title,

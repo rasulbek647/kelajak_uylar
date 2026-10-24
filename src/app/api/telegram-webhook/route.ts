@@ -63,6 +63,14 @@ async function sendTelegramMessage(chatId: number | string, text: string, extra?
 
 export async function POST(req: Request) {
   try {
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const headerSecret = req.headers.get("x-telegram-bot-api-secret-token");
+      if (headerSecret !== webhookSecret) {
+        return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
     const body = await req.json();
 
     if (!botToken) {

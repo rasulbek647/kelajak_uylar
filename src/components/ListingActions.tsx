@@ -12,7 +12,7 @@ export function ListingActions({
   withoutPhone = false,
 }: {
   listingId: string;
-  phone: string;
+  phone?: string | null;
   isFav: boolean;
   title?: string;
   iconsOnly?: boolean;
@@ -83,10 +83,12 @@ export function ListingActions({
     );
   }
 
+  const hasPhone = Boolean(!withoutPhone && phone && phone.trim());
+
   return (
     <>
       {/* Telefon qilish */}
-      {!withoutPhone && (
+      {hasPhone && (
         <a
           href={`tel:${phone}`}
           className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3.5 rounded-full transition flex items-center justify-center gap-2 text-sm mb-2"

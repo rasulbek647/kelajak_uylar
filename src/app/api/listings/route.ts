@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { validateListingNumbers } from "@/lib/listing-validation";
+
+function escapeHtml(str: string): string {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 export async function POST(req: Request) {
   try {
@@ -50,23 +58,12 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Narx tekshiruvi
-    const numPrice = Number(price);
-    if (!numPrice || isNaN(numPrice) || numPrice <= 0) {
+    const valResult = validateListingNumbers({ price, currency, area, rooms });
+    if (!valResult.valid) {
       return NextResponse.json({
-        message: "Narx 0 dan katta bo'lishi kerak",
-        message_ru: "Цена должна быть больше 0",
-        message_en: "Price must be greater than 0",
-      }, { status: 400 });
-    }
-
-    // Mantiqsiz narx chegarasi ($100 mln dan yoki 1 trln so'mdan ortiq bo'lsa)
-    const isUsd = currency === "$" || currency === "USD" || currency === "y.e";
-    if ((isUsd && numPrice > 100_000_000) || (!isUsd && numPrice > 1_000_000_000_000)) {
-      return NextResponse.json({
-        message: "Narx juda katta ko'rsatilgan. Iltimos, to'g'ri narx kiriting.",
-        message_ru: "Указана слишком большая цена. Пожалуйста, введите корректную цену.",
-        message_en: "Price appears unreasonably high. Please enter a valid price.",
+        message: valResult.error,
+        message_ru: valResult.error,
+        message_en: valResult.error,
       }, { status: 400 });
     }
 
@@ -96,11 +93,11 @@ export async function POST(req: Request) {
       data: {
         title,
         description,
-        price,
-        currency,
+        price: valResult.numPrice,
+        currency: valResult.normalizedCurrency,
         location,
-        rooms,
-        area,
+        rooms: valResult.numRooms,
+        area: valResult.numArea,
         type,
         dealType,
         ownerType: ownerType || "Rieltor",
@@ -119,10 +116,10 @@ export async function POST(req: Request) {
     if (settings?.telegramBotToken && settings?.telegramChatId) {
       try {
         const text = `🏠 <b>Yangi e'lon qo'shildi!</b>\n\n` +
-          `<b>Sarlavha:</b> ${title}\n` +
-          `<b>Narxi:</b> ${price} ${currency}\n` +
-          `<b>Manzil:</b> ${location}\n` +
-          `<b>Telefon:</b> ${userPhone}\n` +
+          `<b>Sarlavha:</b> ${escapeHtml(title)}\n` +
+          `<b>Narxi:</b> ${valResult.numPrice} ${valResult.normalizedCurrency}\n` +
+          `<b>Manzil:</b> ${escapeHtml(location)}\n` +
+          `<b>Telefon:</b> ${escapeHtml(userPhone || "")}\n` +
           `<b>Holati:</b> ${isAutoApprove ? '✅ Avto-tasdiqlandi' : '⏳ Kutmoqda'}`;
           
         await fetch(`https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`, {

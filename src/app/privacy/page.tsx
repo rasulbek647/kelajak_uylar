@@ -24,7 +24,7 @@ export default function PrivacyPage() {
           /* RUSSIAN VERSION */
           <article className="prose dark:prose-invert max-w-none space-y-6">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Политика конфиденциальности</h1>
-            <p className="text-xs text-gray-500">Последнее обновление: 18 октября 2026 г.</p>
+            <p className="text-xs text-gray-500">Последнее обновление: 2026 г.</p>
 
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-yellow-500">1. Общие положения</h2>
@@ -56,10 +56,14 @@ export default function PrivacyPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-yellow-500">4. Передача третьим лицам</h2>
+              <h2 className="text-lg font-bold text-yellow-500">4. Передача данных третьим лицам</h2>
               <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                Мы <strong>не продаём и не передаём</strong> ваши персональные данные третьим лицам в рекламных целях. Передача возможна только по законному требованию государственных органов Республики Узбекистан в предусмотренном законодательством порядке.
+                Персональные данные пользователей <strong>ни при каких условиях не продаются</strong> третьим лицам в коммерческих или рекламных целях. Обработка и передача данных допускаются только:
               </p>
+              <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                <li>Техническими провайдерами (хостинг, облачные хранилища, хранение изображений, Telegram-бот и SMS-шлюзы) исключительно в объеме, необходимом для функционирования сервиса (часть серверов может находиться за пределами страны);</li>
+                <li>По официальному законному требованию уполномоченных государственных органов Республики Узбекистан в предусмотренном законодательством порядке.</li>
+              </ul>
             </section>
 
             <section className="space-y-3">
@@ -75,16 +79,12 @@ export default function PrivacyPage() {
                 По всем вопросам касательно конфиденциальности пишите нам через раздел поддержки на сайте или по официальным каналам связи.
               </p>
             </section>
-
-            <div className="mt-8 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 text-xs text-yellow-700 dark:text-yellow-300">
-              ⚠️ <strong>Примечание:</strong> Данный документ является типовой редакцией и подлежит последующей юридической экспертизе в соответствии с корпоративными стандартами компании.
-            </div>
           </article>
         ) : lang === "en" ? (
           /* ENGLISH VERSION */
           <article className="prose dark:prose-invert max-w-none space-y-6">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Privacy Policy</h1>
-            <p className="text-xs text-gray-500">Last updated: October 18, 2026</p>
+            <p className="text-xs text-gray-500">Last updated: 2026</p>
 
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-yellow-500">1. Overview</h2>
@@ -116,10 +116,14 @@ export default function PrivacyPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-yellow-500">4. Third-Party Disclosure</h2>
+              <h2 className="text-lg font-bold text-yellow-500">4. Third-Party Data Transfer</h2>
               <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                We <strong>do not sell or share</strong> your personal details with third-party advertisers. Information is only disclosed if required by the competent authorities of the Republic of Uzbekistan pursuant to applicable law.
+                Personal data is <strong>never sold</strong> to third parties or advertising brokers. Data is processed or shared only in the following necessary cases:
               </p>
+              <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                <li>Technical infrastructure providers (hosting, image cloud storage, Telegram bot, and SMS dispatch providers) strictly to the extent required to operate the platform, some of which may be located abroad;</li>
+                <li>Pursuant to legitimate legal requests issued by authorized governmental authorities of the Republic of Uzbekistan in accordance with applicable legislation.</li>
+              </ul>
             </section>
 
             <section className="space-y-3">
@@ -135,16 +139,12 @@ export default function PrivacyPage() {
                 For questions regarding privacy, please contact us via our site support page or official communication channels.
               </p>
             </section>
-
-            <div className="mt-8 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 text-xs text-yellow-700 dark:text-yellow-300">
-              ⚠️ <strong>Note:</strong> It is recommended that this document undergo legal review prior to final enterprise deployment.
-            </div>
           </article>
         ) : (
           /* UZBEK VERSION */
           <article className="prose dark:prose-invert max-w-none space-y-6">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Maxfiylik siyosati</h1>
-            <p className="text-xs text-gray-500">Oxirgi yangilanish: 2026-yil 18-oktabr</p>
+            <p className="text-xs text-gray-500">Oxirgi yangilanish: 2026-yil</p>
 
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-yellow-500">1. Umumiy qoidalar</h2>
@@ -176,10 +176,14 @@ export default function PrivacyPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-yellow-500">4. Uchinchi shaxslarga berilmasligi</h2>
+              <h2 className="text-lg font-bold text-yellow-500">4. Ma&apos;lumotlarni uchinchi shaxslarga uzatish</h2>
               <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                Sizning shaxsiy ma&apos;lumotlaringiz <strong>uchinchi shaxslarga, reklama agentliklariga sotilmaydi va berilmaydi</strong>. Ma&apos;lumotlar faqat O&apos;zbekiston Respublikasi qonunlarida belgilangan hollarda davlat vakolatli organlari talabiga binoan berilishi mumkin.
+                Foydalanuvchilarning shaxsiy ma&apos;lumotlari <strong>hech qanday holatda uchinchi shaxslarga yoki reklama agentliklariga sotilmaydi</strong>. Ma&apos;lumotlar faqat quyidagi hollarda uzatilishi mumkin:
               </p>
+              <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                <li>Platforma faoliyatini ta&apos;minlovchi texnik xizmat ko&apos;rsatuvchi provayderlar (veb-xosting, bulutli saqlash, rasm hostingi, Telegram bot va SMS xabarnoma xizmatlari) tomonidan zaruriy hajmda ishlov beriladi, ularning ayrim serverlari chet elda joylashgan bo&apos;lishi mumkin;</li>
+                <li>O&apos;zbekiston Respublikasi qonunchiligida belgilangan asoslar bo&apos;yicha davlat vakolatli organlarining qonuniy rasmiy talabiga binoan.</li>
+              </ul>
             </section>
 
             <section className="space-y-3">
@@ -195,10 +199,6 @@ export default function PrivacyPage() {
                 Shaxsiy ma&apos;lumotlaringiz bo&apos;yicha savol yoki takliflar bo&apos;lsa, saytdagi «Qo&apos;llab-quvvatlash» sahifasi orqali biz bilan bog&apos;lanishingiz mumkin.
               </p>
             </section>
-
-            <div className="mt-8 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 text-xs text-yellow-700 dark:text-yellow-300">
-              ⚠️ <strong>Eslatma:</strong> Ushbu hujjat platformaning namunaviy maxfiylik siyosati hisoblanadi va foydalanishdan oldin yuridik tekshiruvdan o&apos;tkazish tavsiya etiladi.
-            </div>
           </article>
         )}
       </div>

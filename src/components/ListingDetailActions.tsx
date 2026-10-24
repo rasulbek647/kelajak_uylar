@@ -10,9 +10,23 @@ export function ListingSellerButtons({
 }: {
   recipientId: string;
   listingId: string;
-  phone: string;
+  phone?: string | null;
 }) {
   const { t } = useLang();
+  const hasPhone = Boolean(phone && phone.trim());
+
+  if (!hasPhone) {
+    return (
+      <div className="w-full">
+        <Link
+          href={`/profile/messages?recipientId=${recipientId}&listingId=${listingId}`}
+          className="w-full py-3.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white font-bold text-sm hover:bg-gray-200 dark:hover:bg-white/20 transition flex items-center justify-center"
+        >
+          {t.writeSeller}
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -167,4 +181,3 @@ export function ListingSellerRole({ ownerType }: { ownerType?: string | null }) 
     </p>
   );
 }
-

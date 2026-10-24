@@ -16,16 +16,28 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Kelajak Uylar – O'zbekistonda uy, kvartira, yer e'lonlari",
-  description: "Kelajak Uylar – Toshkent va O'zbekiston bo'ylab uy, kvartira, yer uchastkasi, hovli va tijorat ko'chmas mulk oldi-sotdisi va ijarasi.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://kelajakuylar.uz"),
+  title: {
+    default: "Kelajak Uylar – O'zbekistonda uy, kvartira, yer e'lonlari",
+    template: "%s | Kelajak Uylar",
+  },
+  description: "Kelajak Uylar – O'zbekiston bo'ylab uy, kvartira, yer uchastkasi, hovli va tijorat ko'chmas mulk oldi-sotdisi va ijarasi.",
   keywords: ["uy", "kvartira", "ko'chmas mulk", "ijara", "sotuv", "Toshkent", "O'zbekiston", "nedvijimost", "real estate Uzbekistan"],
   manifest: "/manifest.json",
-  alternates: {
-    languages: {
-      "uz": "/",
-      "ru": "/?lang=ru",
-      "en": "/?lang=en",
-    },
+  openGraph: {
+    siteName: "Kelajak Uylar",
+    locale: "uz_UZ",
+    type: "website",
+    title: "Kelajak Uylar – O'zbekistonda uy, kvartira, yer e'lonlari",
+    description: "Kelajak Uylar – O'zbekiston bo'ylab uy, kvartira, yer uchastkasi, hovli va tijorat ko'chmas mulk oldi-sotdisi va ijarasi.",
+    images: [
+      {
+        url: "/icons/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Kelajak Uylar",
+      },
+    ],
   },
   appleWebApp: {
     capable: true,
@@ -71,4 +83,3 @@ export default async function RootLayout({
     </html>
   );
 }
-// cache bust 8338

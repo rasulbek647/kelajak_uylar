@@ -42,10 +42,10 @@ export default function TelegramLoginButton({ onSuccess, onError }: TelegramLogi
           ip = ipData.ip || "Noma'lum";
         } catch (e) {}
 
-        // Xavfsiz bypass token orqali NextAuth session ochish
+        // Kriptografik imzolangan token orqali NextAuth session ochish
         const result = await signIn("credentials", {
           phone: data.phone,
-          password: `__tg_verified__${data.userId}`,
+          password: `__tg_verified__${data.loginToken}`,
           userAgent,
           ip,
           redirect: false,
@@ -79,7 +79,7 @@ export default function TelegramLoginButton({ onSuccess, onError }: TelegramLogi
     return () => {
       if (containerRef.current) containerRef.current.innerHTML = "";
     };
-  }, []);
+  }, [onError, onSuccess]);
 
   return (
     <div className="flex flex-col items-center gap-3">

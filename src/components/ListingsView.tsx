@@ -65,7 +65,7 @@ export default function ListingsView({
       {layout === "detailed" ? (
         // ─── 2-TUGMA: HAR BIR E'LON ALOHIDA, CHIROYLI EFFEKTLI REJIM ───
         <div className="flex flex-col gap-4 animate-fadeIn">
-          {listings.map((listing, idx) => (
+          {listings.map((listing) => (
             <ListingCard
               key={listing.id}
               id={listing.id}
@@ -76,7 +76,7 @@ export default function ListingsView({
               rooms={listing.rooms}
               area={listing.area}
               imageUrl={listing.images[0]?.url || "https://via.placeholder.com/800x600?text=Rasm+yo%27q"}
-              badge={idx < 3 && page === 1 ? "TOP" : undefined}
+              badge={listing.isVip ? "VIP" : listing.isTop ? "TOP" : undefined}
               isFavorite={currentUserId ? listing.favoritedBy?.length > 0 : false}
               description={listing.description}
               type={listing.type}
@@ -93,7 +93,7 @@ export default function ListingsView({
       ) : (
         // ─── 1-TUGMA: OLDINGI STANDART REJIM (100% asl holatdagi 5 ustunli jadval) ───
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fadeIn">
-          {listings.map((listing, idx) => (
+          {listings.map((listing) => (
             <ListingCard
               key={listing.id}
               id={listing.id}
@@ -104,7 +104,7 @@ export default function ListingsView({
               rooms={listing.rooms}
               area={listing.area}
               imageUrl={listing.images[0]?.url || "https://via.placeholder.com/800x600?text=Rasm+yo%27q"}
-              badge={idx < 3 && page === 1 ? "TOP" : undefined}
+              badge={listing.isVip ? "VIP" : listing.isTop ? "TOP" : undefined}
               isFavorite={currentUserId ? listing.favoritedBy?.length > 0 : false}
               description={listing.description}
               type={listing.type}

@@ -2,6 +2,17 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
+export const PUBLIC_USER_SELECT = {
+  id: true,
+  name: true,
+  avatar: true,
+  phone: true,
+  showPhone: true,
+  badge: true,
+  isRealtor: true,
+  isVerified: true,
+} as const;
+
 export async function getUserFromSession() {
   const session = await getServerSession(authOptions);
   if (!session?.user) return null;

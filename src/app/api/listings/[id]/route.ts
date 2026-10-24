@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromSession, isAdminFromDB } from "@/lib/server-utils";
+import { validateListingNumbers } from "@/lib/listing-validation";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -102,12 +103,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       type, dealType, ownerType, lat, lng, newImagesUrls, imagesToDelete, amenities
     } = body;
 
+    const valResult = validateListingNumbers({ price, currency, area, rooms });
+    if (!valResult.valid) {
+      return NextResponse.json({ message: valResult.error }, { status: 400 });
+    }
+
     // Yangilash
     const updated = await prisma.listing.update({
       where: { id },
       data: {
-        title, description, price: parseFloat(price), currency, location, 
-        rooms: parseInt(rooms), area: parseFloat(area), type, dealType, ownerType,
+        title, description, price: valResult.numPrice, currency: valResult.normalizedCurrency, location, 
+        rooms: valResult.numRooms, area: valResult.numArea, type, dealType, ownerType,
         lat: lat ? parseFloat(lat) : null,
         lng: lng ? parseFloat(lng) : null,
         amenities: amenities || [],

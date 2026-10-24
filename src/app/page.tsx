@@ -7,6 +7,7 @@ import HomeResultsHeader, { VipListingsTitle } from "@/components/HomeResultsHea
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { PUBLIC_USER_SELECT } from "@/lib/server-utils";
 
 export default async function Home({
   searchParams,
@@ -81,7 +82,7 @@ export default async function Home({
     where,
     include: { 
       images: true,
-      user: true,
+      user: { select: PUBLIC_USER_SELECT },
       favoritedBy: currentUserId ? { where: { userId: currentUserId } } : false
     },
     orderBy: { createdAt: "desc" },
@@ -102,7 +103,7 @@ export default async function Home({
       where: { ...where, isVip: true },
       include: {
         images: true,
-        user: true,
+        user: { select: PUBLIC_USER_SELECT },
         favoritedBy: currentUserId ? { where: { userId: currentUserId } } : false
       },
       orderBy: { createdAt: "desc" },
@@ -142,38 +143,43 @@ export default async function Home({
               <VipListingsTitle />
               <div className="relative">
                 <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide no-scrollbar snap-x snap-mandatory">
-                  {vipListings.map((listing) => (
-                    <a
-                      key={listing.id}
-                      href={`/listing/${listing.id}`}
-                      className="snap-start shrink-0 w-[200px] xs:w-[220px] sm:w-[240px] relative rounded-2xl md:rounded-3xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-xl border border-gray-200/80 dark:border-white/5 hover:border-yellow-400/80 transition-all duration-300"
-                    >
-                      <div className="relative h-[200px] w-full bg-gray-100 dark:bg-gray-800">
-                        {listing.images[0] ? (
-                          <img
-                            src={listing.images[0].url}
-                            alt={listing.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-4xl">🏠</div>
-                        )}
-                        <div className="absolute top-3 right-3 bg-yellow-400 text-gray-950 text-[10px] font-black px-2 py-0.5 rounded-md tracking-wider">VIP</div>
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
-                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
-                            {listing.title.charAt(0)}
+                  {vipListings.map((listing) => {
+                    const sellerName = listing.user?.name || "Kelajak Uylar";
+                    const sellerInitial = (listing.user?.name || "K").charAt(0).toUpperCase();
+
+                    return (
+                      <a
+                        key={listing.id}
+                        href={`/listing/${listing.id}`}
+                        className="snap-start shrink-0 w-[200px] xs:w-[220px] sm:w-[240px] relative rounded-2xl md:rounded-3xl overflow-hidden group cursor-pointer shadow-sm hover:shadow-xl border border-gray-200/80 dark:border-white/5 hover:border-yellow-400/80 transition-all duration-300"
+                      >
+                        <div className="relative h-[200px] w-full bg-gray-100 dark:bg-gray-800">
+                          {listing.images[0] ? (
+                            <img
+                              src={listing.images[0].url}
+                              alt={listing.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-4xl">🏠</div>
+                          )}
+                          <div className="absolute top-3 right-3 bg-yellow-400 text-gray-950 text-[10px] font-black px-2 py-0.5 rounded-md tracking-wider">VIP</div>
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
+                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                              {sellerInitial}
+                            </div>
+                            <span className="text-white text-[11px] font-medium truncate max-w-[80px]">{sellerName}</span>
                           </div>
-                          <span className="text-white text-[11px] font-medium truncate max-w-[80px]">{listing.title.split(" ")[0]}</span>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3">
+                            <p className="text-white font-bold text-base leading-tight">
+                              {listing.price.toLocaleString("ru-RU")} {listing.currency}
+                            </p>
+                            <p className="text-gray-300 text-xs mt-0.5 line-clamp-2 leading-tight">{listing.title}</p>
+                          </div>
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3">
-                          <p className="text-white font-bold text-base leading-tight">
-                            {listing.price.toLocaleString("ru-RU")} {listing.currency}
-                          </p>
-                          <p className="text-gray-300 text-xs mt-0.5 line-clamp-2 leading-tight">{listing.title}</p>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
+                      </a>
+                    );
+                  })}
                 </div>
                 <div className="flex justify-center gap-1.5 mt-3">
                   {vipListings.map((_, i) => (

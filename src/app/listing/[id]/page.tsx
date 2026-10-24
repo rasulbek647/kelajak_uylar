@@ -9,6 +9,8 @@ import { ListingActions } from "@/components/ListingActions";
 import { ShikoyatButton } from "@/components/ShikoyatButton";
 import RatingSection from "@/components/RatingSection";
 import ViewTracker from "@/components/ViewTracker";
+import { PUBLIC_USER_SELECT } from "@/lib/server-utils";
+import type { Metadata } from "next";
 import {
   ListingSellerButtons,
   ListingViewProfileBtn,
@@ -20,6 +22,72 @@ import {
   ListingAmenitiesList,
   ListingSellerRole
 } from "@/components/ListingDetailActions";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: {
+      images: { take: 1 },
+    },
+  });
+
+  if (!listing) {
+    return {
+      title: "E'lon topilmadi | Kelajak Uylar",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const isNoIndex = listing.status !== "ACTIVE" || listing.isHidden;
+  const cleanDescription = (listing.description || "").split("\n---")[0].trim();
+  const metaDescParts = [
+    listing.dealType,
+    listing.type,
+    `${listing.rooms} xona`,
+    `${listing.area} m²`,
+    listing.location,
+    cleanDescription,
+  ].filter(Boolean);
+  const rawMetaDesc = metaDescParts.join(", ");
+  const description = rawMetaDesc.length > 200 ? rawMetaDesc.slice(0, 197) + "..." : rawMetaDesc;
+
+  let ogImageUrl = listing.images[0]?.url || "/icons/icon-512x512.png";
+  if (ogImageUrl.includes("cloudinary.com") && ogImageUrl.includes("/upload/")) {
+    ogImageUrl = ogImageUrl.replace("/upload/", "/upload/c_fill,w_1200,h_630,q_auto,f_jpg/");
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kelajakuylar.uz";
+  const canonicalUrl = `${siteUrl.replace(/\/+$/, "")}/listing/${listing.id}`;
+
+  return {
+    title: `${listing.title} — ${listing.price.toLocaleString("ru-RU")} ${listing.currency}`,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${listing.title} — ${listing.price.toLocaleString("ru-RU")} ${listing.currency}`,
+      description,
+      url: canonicalUrl,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: listing.title,
+        },
+      ],
+    },
+    robots: isNoIndex
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
+  };
+}
 
 export default async function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,7 +102,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const listing = await prisma.listing.findUnique({
     where: { id },
     include: {
-      user: true,
+      user: { select: PUBLIC_USER_SELECT },
       images: true,
       favoritedBy: currentUserId ? { where: { userId: currentUserId } } : false
     }
@@ -43,6 +111,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   if (!listing) notFound();
 
   const isFav = currentUserId ? listing.favoritedBy.length > 0 : false;
+  const sellerPhone = listing.user.showPhone !== false ? listing.user.phone : "";
 
   const similar = await prisma.listing.findMany({
     where: { id: { not: id }, type: listing.type, status: "ACTIVE", isHidden: false },
@@ -111,13 +180,13 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             <ListingSellerButtons
               recipientId={listing.user.id}
               listingId={listing.id}
-              phone={listing.user.phone}
+              phone={sellerPhone}
             />
 
             {/* Teglar + ikonkalar */}
             <div className="flex items-center justify-between">
               <ListingTags dealType={listing.dealType} type={listing.type} />
-              <ListingActions listingId={listing.id} phone={listing.user.phone} isFav={isFav} title={`${listing.title} - ${listing.price.toLocaleString("ru-RU")} ${listing.currency}`} iconsOnly />
+              <ListingActions listingId={listing.id} phone={sellerPhone} isFav={isFav} title={`${listing.title} - ${listing.price.toLocaleString("ru-RU")} ${listing.currency}`} iconsOnly />
             </div>
 
             {/* Sarlavha + Narx */}

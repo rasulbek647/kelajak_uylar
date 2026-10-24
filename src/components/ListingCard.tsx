@@ -24,7 +24,7 @@ interface ListingProps {
   createdAt?: string | Date;
   views?: number;
   imagesCount?: number;
-  user?: { id?: string; name?: string; phone?: string; avatar?: string | null; isVerified?: boolean };
+  user?: { id?: string; name?: string; phone?: string; avatar?: string | null; isVerified?: boolean; showPhone?: boolean };
   layout?: "default" | "detailed" | "grid" | "list";
 }
 
@@ -89,8 +89,8 @@ export const ListingCard: FC<ListingProps> = ({
     }
   };
 
-  const authorName = user?.name || title.split(" ")[0] || "User";
-  const sellerPhone = user?.phone;
+  const authorName = user?.name || "Kelajak Uylar";
+  const sellerPhone = user?.showPhone !== false ? user?.phone : undefined;
 
   // Tarjima funksiyalari
   const translateDealType = (dt: string) => {

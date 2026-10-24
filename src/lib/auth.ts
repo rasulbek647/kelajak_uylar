@@ -2,6 +2,8 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { resolveAuthSecret, verifyTelegramLoginToken } from "@/lib/auth-secret";
 
 // User-Agent'dan qurilma nomini olish
 function parseDevice(userAgent: string): string {
@@ -33,7 +35,7 @@ interface LoginAttempt {
 const loginAttempts = new Map<string, LoginAttempt>();
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "kelajak-uylar-fallback-secret-2026-production-ready",
+  secret: resolveAuthSecret(),
   providers: [
     CredentialsProvider({
       name: "Telefon raqam",
@@ -67,8 +69,9 @@ export const authOptions: NextAuthOptions = {
 
         // Parolni tekshirish
         if (credentials.password.startsWith("__tg_verified__")) {
-          const expectedSecret = `__tg_verified__${user.id}`;
-          if (credentials.password !== expectedSecret) {
+          const loginToken = credentials.password.slice("__tg_verified__".length);
+          const isValid = verifyTelegramLoginToken(loginToken, user.id);
+          if (!isValid) {
             throw new Error("Telegram tasdiqlash xatosi");
           }
         } else {
@@ -98,7 +101,7 @@ export const authOptions: NextAuthOptions = {
         const device = parseDevice(userAgent);
 
         // SessionToken yaratish va saqlash
-        const sessionToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const sessionToken = crypto.randomBytes(24).toString("hex");
         
         try {
           await prisma.userSession.create({
@@ -156,7 +159,10 @@ export const authOptions: NextAuthOptions = {
         token.picture = (user as any).image || null;
         token.sessionToken = (user as any).sessionToken;
         token.id = user.id;
-      } else if (token.sessionToken) {
+      } else {
+        if (!token.sessionToken) {
+          throw new Error("Session revoked");
+        }
         // Har gal tokenni DB dan tekshiramiz (Chiqarib yuborilgan bo'lsa, sessiyani to'xtatish uchun)
         const dbSession = await prisma.userSession.findFirst({
           where: { token: token.sessionToken as string },
@@ -165,6 +171,8 @@ export const authOptions: NextAuthOptions = {
         if (!dbSession) {
           throw new Error("Session revoked"); // Sessiya bekor qilinadi
         }
+        token.role = dbSession.user.role;
+        token.phone = dbSession.user.phone;
         // Ma'lumotlarni DB dan yangilab turamiz, lekin "update" trigger bo'lmasa!
         if (trigger !== "update") {
           token.picture = dbSession.user.avatar || null;

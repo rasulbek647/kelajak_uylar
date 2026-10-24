@@ -3,8 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+async function isAdminFromDB(session: any): Promise<boolean> {
+  if (!session?.user) return false;
+  const phone = (session.user as any).phone;
+  if (!phone) return false;
+  const user = await prisma.user.findUnique({ where: { phone } });
+  return user?.role === "ADMIN";
+}
+
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const isAdmin = await isAdminFromDB(session);
+
     let settings = await prisma.systemSetting.findUnique({
       where: { id: "default" }
     });
@@ -15,19 +26,16 @@ export async function GET() {
       });
     }
 
+    if (!isAdmin) {
+      const { telegramBotToken, telegramChatId, ...publicSettings } = settings;
+      return NextResponse.json(publicSettings);
+    }
+
     return NextResponse.json(settings);
   } catch (error: any) {
     console.error("Settings GET error:", error);
     return NextResponse.json({ message: "Xatolik yuz berdi" }, { status: 500 });
   }
-}
-
-async function isAdminFromDB(session: any): Promise<boolean> {
-  if (!session?.user) return false;
-  const phone = (session.user as any).phone;
-  if (!phone) return false;
-  const user = await prisma.user.findUnique({ where: { phone } });
-  return user?.role === "ADMIN";
 }
 
 export async function PUT(req: Request) {

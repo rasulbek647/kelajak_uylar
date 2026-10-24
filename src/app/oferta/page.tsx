@@ -90,11 +90,11 @@ export default function OfertaPage() {
             <ul className="list-none space-y-1 text-sm text-gray-600 dark:text-gray-400 p-4 bg-gray-50 dark:bg-[#1e1f23] rounded-lg">
               <li><strong>Nomi:</strong> «KABIRJANOV IT GROUP» MCHJ</li>
               <li><strong>Tashkiliy-huquqiy shakli:</strong> mas'uliyati cheklangan jamiyat</li>
-              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MSY, Tinchlik ko'chasi, 499-uy.</li>
+              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MFY, Tinchlik ko'chasi, 499-uy.</li>
               <li><strong>STIR:</strong> 310575560</li>
               <li><strong>Elektron pochta:</strong> jokabirjanov@gmail.com</li>
               <li><strong>Telefon:</strong> +998901161604</li>
-              <li><strong>Sayt:</strong> https://kelajak-uylar.uz</li>
+              <li><strong>Sayt:</strong> https://kelajakuylar.uz</li>
             </ul>
             <p><strong>5.3.</strong> Pullik funksiyalar to'g'risidagi ma'lumotda funksiya nomi, qiymati, amal qilish muddati, ulash tartibi, muhim cheklovlar va Foydalanuvchiga to'lov to'g'risida qaror qabul qilish uchun zarur bo'lgan boshqa shartlar ko'rsatilishi lozim.</p>
             <p><strong>5.4.</strong> Platforma, pullik funksiyalar, Tariflar va foydalanish qoidalari to'g'risidagi ma'lumot davlat tilida taqdim etiladi va qo'shimcha ravishda rus hamda boshqa tillarda ham berilishi mumkin.</p>
@@ -348,7 +348,7 @@ export default function OfertaPage() {
               <li><strong>Bank rekvizitlari:</strong> 20208000005674651001</li>
               <li><strong>Elektron pochta:</strong> jokabirjanov@gmail.com</li>
               <li><strong>Telefon:</strong> +998901161604</li>
-              <li><strong>Sayt:</strong> https://kelajak-uylar.uz</li>
+              <li><strong>Sayt:</strong> https://kelajakuylar.uz</li>
             </ul>
           </div>
 
@@ -828,7 +828,7 @@ export default function OfertaPage() {
           <div className="space-y-4">
             <ul className="list-none space-y-1 text-sm text-gray-600 dark:text-gray-400 p-4 bg-gray-50 dark:bg-[#1e1f23] rounded-lg">
               <li><strong>Nomi:</strong> «KABIRJANOV IT GROUP» MCHJ</li>
-              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MSY, Tinchlik ko'chasi, 499-uy.</li>
+              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MFY, Tinchlik ko'chasi, 499-uy.</li>
               <li><strong>Elektron pochta:</strong> jokabirjanov@gmail.com</li>
               <li><strong>Telefon:</strong> +998901161604</li>
             </ul>
@@ -850,7 +850,7 @@ export default function OfertaPage() {
             <p><strong>1.1.</strong> Shaxsiy ma'lumotlar operatori «KABIRJANOV IT GROUP» MCHJ hisoblanadi.</p>
             <p><strong>1.2.</strong> Operatorning aloqa ma'lumotlari:</p>
             <ul className="list-none space-y-1 text-sm text-gray-600 dark:text-gray-400 p-4 bg-gray-50 dark:bg-[#1e1f23] rounded-lg">
-              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MSY, Tinchlik ko'chasi, 499-uy.</li>
+              <li><strong>Manzil:</strong> O'zbekiston Respublikasi, Toshkent shahri, Bekobod tumani, «Bobir Mirzo» MFY, Tinchlik ko'chasi, 499-uy.</li>
               <li><strong>Elektron pochta:</strong> jokabirjanov@gmail.com</li>
               <li><strong>Telefon:</strong> +998901161604</li>
             </ul>
